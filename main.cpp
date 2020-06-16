@@ -6,7 +6,7 @@
 #include "src/core/renderer.h"
 
 using namespace std;
-using Eigen::MatrixXd;
+using namespace Eigen;
 
 const TGAColor g_white = TGAColor(0xff, 0xff, 0xff, 0xff);
 const TGAColor g_red = TGAColor(0xff, 0, 0, 0xff);
@@ -29,11 +29,15 @@ int main()
     };
     vector<int> indices = { 0, 1, 2 };
     Eigen::Matrix4d model;
+    model<<1, 0, 0, 0,
+           0, 1, 0, 0,
+           0, 0, 1, -10,
+           0, 0, 0, -1;
     Eigen::Matrix4d view;
     Eigen::Matrix4d projection;
-
+    auto mvp = model;
     g_render->set_data(vertices, indices);
-    g_render->set_matrix(projection * view * model);
+    g_render->set_matrix(mvp);
     g_render->draw_triangles(1);
     TGAImage img(*(g_render->get_frame_buffer()));
     img.flip_vertically();

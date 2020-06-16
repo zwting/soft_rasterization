@@ -37,7 +37,7 @@ FrameBuffer& FrameBuffer::operator=(const FrameBuffer& rhl)
 
 uint8_t* FrameBuffer::operator[](int x)
 {
-    assert(x >= 0 and x < width);
+    assert(x >= 0 && x < width);
     return data + x * static_cast<int>(format);
 }
 

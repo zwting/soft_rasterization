@@ -93,7 +93,8 @@ std::vector<Vertex> Renderer::setup_primitive_and_rasterization(std::vector<Vert
 }
 std::vector<Vertex> Renderer::setup_triangle(std::vector<Vertex>& input_vertex)
 {
-    for (auto it = input_vertex.begin(); it != input_vertex.end(); it++)
+    std::vector<Vertex> ret;
+    for (auto it = input_vertex.begin(); it != input_vertex.end(); it+=3)
     {
         BoundingBox bbox = geo_utils::get_bounding_box(*it, *(it + 1), *(it + 2));
         int xmin = std::floor(bbox.lb_point.x);
@@ -111,6 +112,8 @@ std::vector<Vertex> Renderer::setup_triangle(std::vector<Vertex>& input_vertex)
             }
         }
     }
+
+    return ret;
 }
 
 std::vector<Vertex> Renderer::fragment_stage_(std::vector<Vertex>& input_fragments)
