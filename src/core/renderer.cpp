@@ -69,11 +69,27 @@ void Renderer::render()
 std::vector<Vertex> Renderer::vertex_stage_()
 {
     std::vector<Vertex> ret;
+    Eigen::Vector4d v;
+    Eigen::Matrix4d view_port_mat;
+    int half_w = frame_buffer_->get_width() / 2;
+    int half_h = frame_buffer_->get_height() / 2;
+    view_port_mat<<half_w, 0, 0, 0,
+                    0, half_h, 0, 0,
+                    0, 0, 1, 0,
+                    0, 0, 0, 1;
     for (std::vector<Vertex>::size_type i = 0; i < indicles_.size(); ++i)
     {
         auto vertex = get_vertex_(indicles_[i]);
-        //TODO: mvp变换之后做透视除法, 然后做屏幕映射
-        ret.push_back(mat_ * vertex);
+        v<<vertex.x, vertex.y, vertex.z, 1;
+        // mvp 变换
+        v = mat_ * v;
+        //透视除法
+        v(0) /= v(3);
+        v(1) /= v(3);
+        v(2) /= v(3);
+        //视口变换
+        v = view_port_mat * v; 
+        ret.push_back(Vertex(v(0), v(1), v(2), vertex.c));
     }
     return ret;
 }
@@ -101,16 +117,23 @@ std::vector<Vertex> Renderer::setup_triangle(std::vector<Vertex>& input_vertex)
         int xmax = std::ceil(bbox.rt_point.x);
         int ymin = std::floor(bbox.lb_point.y);
         int ymax = std::ceil(bbox.rt_point.y);
-        for (int y = ymin; y < ymax; y++)
-        {
-            for (int x = xmin; x < xmax; x++)
-            {
-                //1. 过滤掉不在三角形内部的点
-                //2. 计算当前片元的重心坐标
-                //3. 根据重心坐标计算当前片元的颜色
-                //4. 结束
-            }
-        }
+        Eigen::Vector2i v0, v1, v2;
+        std::cout<<xmin<<","<<xmax<<","<<ymin<<","<<ymax<<std::endl;
+        // for (int y = ymin; y < ymax; y++)
+        // {
+        //     for (int x = xmin; x < xmax; x++)
+        //     {
+        //         //1. 过滤掉不在三角形内部的点
+        //         v0<<(it->x), (it->y);
+        //         v1<<((it+1)->x), ((it + 1)->y);
+        //         v2<<((it + 2)->x), ((it + 2)->y);
+
+        //         std::cout<<v0<<v1<<v2<<std::endl;
+        //         //2. 计算当前片元的重心坐标
+        //         //3. 根据重心坐标计算当前片元的颜色
+        //         //4. 结束
+        //     }
+        // }
     }
 
     return ret;

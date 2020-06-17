@@ -29,12 +29,12 @@ int main()
     };
     vector<int> indices = { 0, 1, 2 };
     Eigen::Matrix4d model;
+    Eigen::Matrix4d view;
+    Eigen::Matrix4d projection;
     model<<1, 0, 0, 0,
            0, 1, 0, 0,
            0, 0, 1, -10,
-           0, 0, 0, -1;
-    Eigen::Matrix4d view;
-    Eigen::Matrix4d projection;
+           0, 0, 0, 1;
     auto mvp = model;
     g_render->set_data(vertices, indices);
     g_render->set_matrix(mvp);
