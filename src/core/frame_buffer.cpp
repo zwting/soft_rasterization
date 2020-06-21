@@ -45,11 +45,11 @@ void FrameBuffer::clear(const uint8_t* dst)
 {
     assert(dst != nullptr);
     uint8_t r, g, b;
-    r = dst[0];
+    r = dst[2];
     g = dst[1];
-    b = dst[2];
+    b = dst[0];
 
-    if (r == g && g == b)
+    if (r == g && g == b && r == 0)
     {
         std::memset(data, 0, size());
     }
@@ -80,9 +80,11 @@ int FrameBuffer::size() const
 
 void FrameBuffer::set_pixel(int x, int y, const uint8_t* dst)
 {
-    assert(x >= 0 && x < width && y >= 0 && y < height);
-    int idx = width * y + x;
-    std::memcpy(this->data + idx, dst, static_cast<int>(format));
+    if(x < 0 || x > width || y < 0 || y > height)
+        return;
+    int ele_size = static_cast<int>(format);
+    int idx = (width * y + x) * ele_size;
+    std::memcpy(this->data + idx, dst, ele_size);
 }
 
 void FrameBuffer::set_pixel(int x, int y, const Color3B& color)

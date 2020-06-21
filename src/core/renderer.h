@@ -5,11 +5,11 @@
 #include "Eigen/Dense"
 #include "../types.h"
 
+const int CLEAR_FRAME = 0x1;
+const int CLEAR_DEPTH = 0x2;
+
 class Renderer
 {
- public:
-    enum class ClearFlag { FRAME = 0x1, DEPTH = 0x2 };
-
  private:
     FrameBuffer* frame_buffer_;
     FrameBuffer* depth_buffer_;
@@ -19,7 +19,14 @@ class Renderer
 
     PrimitiveType primitive_type_;
 
-    Eigen::Matrix4d mat_;
+    Eigen::Matrix4d mat_mvp_;
+    Eigen::Matrix4d mat_model_;
+    Eigen::Matrix4d mat_view_;
+    Eigen::Matrix4d mat_projection_;
+
+    bool is_model_dirty_;
+    bool is_view_dirty_;
+    bool is_projection_dirty_;
 
     Vertex& get_vertex_(int idx);
 
@@ -40,9 +47,26 @@ class Renderer
     void draw_point(int count);
     void draw_lines(int count);
     void draw_triangles(int count);
-    void set_matrix(const Eigen::Matrix4d& matrix) { mat_ = matrix; }
+    void set_matrix(const Eigen::Matrix4d& matrix) { mat_mvp_ = Eigen::Matrix4d(matrix); }
+    void set_model(const Eigen::Matrix4d& model)
+    {
+        is_model_dirty_ = true;
+        mat_model_ = Eigen::Matrix4d(model);
+    }
+    void set_view(const Eigen::Matrix4d& view)
+    {
+        is_view_dirty_ = true;
+        mat_view_ = Eigen::Matrix4d(view);
+    }
+    void set_projection(const Eigen::Matrix4d& projection)
+    {
+        is_projection_dirty_ = true;
+        mat_projection_ = Eigen::Matrix4d(projection);
+    }
 
-    void clear(int clear_flag = static_cast<int>(ClearFlag::FRAME));
+    const Eigen::Matrix4d& get_mvp();
+
+    void clear(int clear_flag, const Color3B& clear_color);
     FrameBuffer* get_frame_buffer() const { return frame_buffer_; }
     FrameBuffer* get_depth_buffer() const { return depth_buffer_; }
 };

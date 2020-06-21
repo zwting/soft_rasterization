@@ -99,7 +99,7 @@ struct Color3B
     {
         struct
         {
-            uint8_t r, g, b;
+            uint8_t b, g, r;
         };
 
         uint8_t raw[3]{};
@@ -120,17 +120,28 @@ struct Color3B
         b = val;
         return *this;
     }
+
+    Color3B operator*(const double factor)
+    {
+        return Color3B(
+            static_cast<uint8_t>(r * factor),
+            static_cast<uint8_t>(g * factor),
+            static_cast<uint8_t>(b * factor)
+        );
+    }
+
+    Color3B operator+(const Color3B& rhs)
+    {
+        return Color3B(r + rhs.r, g + rhs.g, b + rhs.b);
+    }
 };
 
 struct Color4B
 {
     union
     {
-        struct
-        {
-            uint8_t r, g, b, a;
-        };
-
+        struct { uint8_t a, b, g, r; };
+        struct { Color3B rgb;};
         uint8_t raw[4]{};
     };
 
@@ -157,6 +168,26 @@ struct Color4B
         g = rhs.g;
         b = rhs.b;
         return *this;
+    }
+
+    Color4B operator*(const double factor)
+    {
+        return Color4B(
+            static_cast<uint8_t>(r * factor),
+            static_cast<uint8_t>(g * factor),
+            static_cast<uint8_t>(b * factor),
+            static_cast<uint8_t>(a * factor)
+        );
+    }
+
+    Color4B operator+(const Color4B& rhs)
+    {
+        return Color4B(
+            r + rhs.r,
+            g + rhs.g,
+            b + rhs.b,
+            a + rhs.a
+        );
     }
 };
 
