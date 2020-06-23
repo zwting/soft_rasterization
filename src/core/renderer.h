@@ -14,7 +14,7 @@ class Renderer
     FrameBuffer* frame_buffer_;
     FrameBuffer* depth_buffer_;
 
-    std::vector<Vertex> verticles_;
+    std::vector<Vertexd> verticles_;
     std::vector<int> indicles_;
 
     PrimitiveType primitive_type_;
@@ -28,22 +28,23 @@ class Renderer
     bool is_view_dirty_;
     bool is_projection_dirty_;
 
-    Vertex& get_vertex_(int idx);
+    Vertexd& get_vertex_(int idx);
 
     void mid_point_draw_line_(int x0, int y0, int x1, int y1, const Color3B& color);
 
     //----------------渲染管线------------------
     void render();
-    std::vector<Vertex> vertex_stage_();
-    std::vector<Vertex> setup_primitive_and_rasterization(std::vector<Vertex>& input_vertexs);
-    std::vector<Vertex> fragment_stage_(std::vector<Vertex>& input_fragments);
+    std::vector<Vertexd> vertex_stage_();
+    std::vector<Vertexi> setup_primitive_and_rasterization(std::vector<Vertexd>& input_vertexs);
+    std::vector<Vertexi> fragment_stage_(std::vector<Vertexi>& input_fragments);
 
-    std::vector<Vertex> setup_triangle(std::vector<Vertex>& input_vertex);
+    std::vector<Vertexi> setup_triangle(std::vector<Vertexd>& input_vertex);
+    std::vector<Vertexi> test_stage_(std::vector<Vertexi>& fragments);
 
  public:
 
     explicit Renderer(FrameBuffer* frame_buffer, FrameBuffer* depth_buffer);
-    void set_data(std::vector<Vertex>& verticles, std::vector<int>& indicles);
+    void set_data(std::vector<Vertexd>& verticles, std::vector<int>& indicles);
     void draw_point(int count);
     void draw_lines(int count);
     void draw_triangles(int count);

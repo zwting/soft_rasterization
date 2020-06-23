@@ -10,7 +10,7 @@
 
 namespace geo_utils
 {
-    BoundingBox get_bounding_box(Vertex a, Vertex b, Vertex c);
+    BoundingBox get_bounding_box(const Vertexd& a, const Vertexd& b, const Vertexd& c);
 
     Eigen::Matrix4d get_camera_mat(const Eigen::Vector3d& pos, const Eigen::Vector3d& target, const Eigen::Vector3d& up);
 

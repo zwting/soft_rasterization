@@ -3,7 +3,7 @@
 #include <misc/geometry_utils.h>
 #include <iostream>
 
-Vertex& Renderer::get_vertex_(int idx)
+Vertexd& Renderer::get_vertex_(int idx)
 {
     assert(idx >= 0 && idx < indicles_.size());
     const std::vector<int>::value_type vertex_idx = indicles_[idx];
@@ -67,7 +67,9 @@ void Renderer::render()
     //深度测试
     //alpha测试
     //模板测试
+    fragments = test_stage_(fragments);
 
+    //blend阶段
     //写入frame_buffer
     for (auto frag : fragments)
     {
@@ -76,9 +78,9 @@ void Renderer::render()
     }
 }
 
-std::vector<Vertex> Renderer::vertex_stage_()
+std::vector<Vertexd> Renderer::vertex_stage_()
 {
-    std::vector<Vertex> ret;
+    std::vector<Vertexd> ret;
     Eigen::Vector4d v;
     Eigen::Matrix4d view_port_mat;
     int half_w = frame_buffer_->get_width() / 2;
@@ -88,7 +90,7 @@ std::vector<Vertex> Renderer::vertex_stage_()
         0, 0, 1, 0,
         0, 0, 0, 1;
     auto mvp = this->get_mvp();
-    for (std::vector<Vertex>::size_type i = 0; i < indicles_.size(); ++i)
+    for (std::vector<Vertexd>::size_type i = 0; i < indicles_.size(); ++i)
     {
         auto vertex = get_vertex_(indicles_[i]);
         v << vertex.x, vertex.y, vertex.z, 1;
@@ -102,14 +104,14 @@ std::vector<Vertex> Renderer::vertex_stage_()
 
         //视口变换
         v = view_port_mat * v;
-        ret.push_back(Vertex(v(0), v(1), v(2), vertex.c));
+        ret.emplace_back(Vertexd(v(0), v(1), v(2), vertex.c));
     }
     return ret;
 }
 
-std::vector<Vertex> Renderer::setup_primitive_and_rasterization(std::vector<Vertex>& input_vertexs)
+std::vector<Vertexi> Renderer::setup_primitive_and_rasterization(std::vector<Vertexd>& input_vertexs)
 {
-    std::vector<Vertex> ret;
+    std::vector<Vertexi> ret;
     switch (primitive_type_)
     {
         case PrimitiveType::Triangle:
@@ -120,66 +122,51 @@ std::vector<Vertex> Renderer::setup_primitive_and_rasterization(std::vector<Vert
     }
     return ret;
 }
-std::vector<Vertex> Renderer::setup_triangle(std::vector<Vertex>& input_vertex)
+std::vector<Vertexi> Renderer::setup_triangle(std::vector<Vertexd>& input_vertex)
 {
-    std::vector<Vertex> ret;
-    auto cross = [](const Eigen::Vector2i& a, const Eigen::Vector2i& b)
+    std::vector<Vertexi> ret;
+    auto height = frame_buffer_->get_height();
+    for (decltype(input_vertex.size()) i = 0; i < input_vertex.size(); i += 3)
     {
-      return a(0) * b(1) - a(1) * b(0);
-    };
-    int height = frame_buffer_->get_height();
-    for (auto it = input_vertex.begin(); it != input_vertex.end(); it += 3)
-    {
-        BoundingBox bbox = geo_utils::get_bounding_box(*it, *(it + 1), *(it + 2));
-        int xmin = std::floor(bbox.lb_point.x);
-        int xmax = std::ceil(bbox.rt_point.x);
-        int ymin = std::floor(bbox.lb_point.y);
-        int ymax = std::ceil(bbox.rt_point.y);
+        BoundingBox bbox = geo_utils::get_bounding_box(input_vertex[i], input_vertex[i + 1], input_vertex[i + 2]);
+        int xmin = static_cast<int>(std::floor(bbox.lb_point.x));
+        int ymin = static_cast<int>(std::floor(bbox.lb_point.y));
+        int xmax = static_cast<int>(std::ceil(bbox.rt_point.x));
+        int ymax = static_cast<int>(std::ceil(bbox.rt_point.y));
 
-        Eigen::Vector2i v0, v1, v2;
-        v0 << (it->x), (it->y);
-        v1 << ((it + 1)->x), ((it + 1)->y);
-        v2 << ((it + 2)->x), ((it + 2)->y);
+        Vec2<double> v0(input_vertex[i].x, input_vertex[i].y),
+            v1(input_vertex[i + 1].x, input_vertex[i + 1].y),
+            v2(input_vertex[i + 2].x, input_vertex[i + 2].y);
 
-        Eigen::Vector2i v01 = v1 - v0;
-        Eigen::Vector2i v12 = v2 - v1;
-        Eigen::Vector2i v20 = v0 - v2;
-
-//        std::cout << xmin << "," << ymin << "," << xmax << "," << ymax << std::endl;
-        auto f = [](const Eigen::Vector2i& a, const Eigen::Vector2i& b, const int x, const int y)
+        auto f = [](const Vec2<double>& a, const Vec2<double>& b, const int x, const int y)
         {
-          int A = a(1) - b(1);
-          int B = b(0) - a(0);
-          return A * x + B * y + a(0) * b(1) - a(1) * b(0);
+          double A = a.y - b.y;
+          double B = b.x - a.x;
+          return A * x + B * y + a.x * b.y - a.y * b.x;
         };
-        double f_alpha = f(v0, v1, v2(0), v2(1));
-        double f_beta = f(v1, v2, v0(0), v0(1));
-        double f_gamma = f(v2, v0, v1(0), v1(1));
+        double f_alpha = f(v0, v1, v2.x, v2.y);
+        double f_beta = f(v1, v2, v0.x, v0.y);
+        double f_gamma = f(v2, v0, v1.x, v1.y);
         for (int y = ymin; y < ymax; y++)
         {
             for (int x = xmin; x < xmax; x++)
             {
-                //1. 过滤掉不在三角形内部的点
-                Eigen::Vector2i vp(x, y);
-                Eigen::Vector2i v0p = vp - v0;
-                Eigen::Vector2i v1p = vp - v1;
-                Eigen::Vector2i v2p = vp - v2;
-
-                if (cross(v01, v0p) < 0 || cross(v12, v1p) < 0 || cross(v20, v2p) < 0)
-                {
-                    continue;
-                }
-
-                //2. 计算当前片元的重心坐标
+                //1. 计算当前片元的重心坐标
                 double alpha = f(v0, v1, x, y) / f_alpha;
                 double beta = f(v1, v2, x, y) / f_beta;
-                double gamma = 1 - alpha - beta;
+                double gamma = f(v2, v0, x, y) / f_gamma;
+
+                //2. 过滤掉不在三角形内部的点
+                if (alpha < 0 || beta < 0 || gamma < 0)
+                    continue;
 
                 //3. 根据重心坐标计算当前片元的颜色
-                Color4B c = (it + 2)->c * alpha + (it)->c * beta + (it + 1)->c * gamma;
+                Color4B c = input_vertex[i + 2].c * alpha + input_vertex[i].c * beta + input_vertex[i + 1].c * gamma;
+                double z = input_vertex[i + 2].z * alpha + input_vertex[i].z * beta + input_vertex[i + 1].z * gamma;
 
                 //4. 结束
-                ret.push_back(Vertex(x, height - y, it->z, c));
+
+                ret.emplace_back(Vertexi(x,height - y, z, c));
             }
         }
     }
@@ -187,14 +174,22 @@ std::vector<Vertex> Renderer::setup_triangle(std::vector<Vertex>& input_vertex)
     return ret;
 }
 
-std::vector<Vertex> Renderer::fragment_stage_(std::vector<Vertex>& input_fragments)
+std::vector<Vertexi> Renderer::fragment_stage_(std::vector<Vertexi>& input_fragments)
 {
-    std::vector<Vertex> ret;
+    std::vector<Vertexi> ret;
     for (auto it = input_fragments.begin(); it != input_fragments.end(); it++)
     {
-        ret.push_back(Vertex(it->x, it->y, it->z, it->c));
+        ret.emplace_back(Vertexi(it->x, it->y, it->z, it->c));
     }
     return ret;
+}
+
+std::vector<Vertexi> Renderer::test_stage_(std::vector<Vertexi>& fragments)
+{
+//    std::vector<Vertex> ret;
+//
+//    return ret;
+    return fragments;
 }
 
 Renderer::Renderer(FrameBuffer* frame_buffer, FrameBuffer* depth_buffer)
@@ -203,12 +198,15 @@ Renderer::Renderer(FrameBuffer* frame_buffer, FrameBuffer* depth_buffer)
     this->frame_buffer_ = frame_buffer;
     this->depth_buffer_ = depth_buffer;
 
+    //初始化z-buffer
+//    std::memset(depth_buffer->get_data(), 0xff, sizeof)
+
     this->is_model_dirty_ = false;
     this->is_view_dirty_ = false;
     this->is_projection_dirty_ = false;
 }
 
-void Renderer::set_data(std::vector<Vertex>& verticles, std::vector<int>& indicles)
+void Renderer::set_data(std::vector<Vertexd>& verticles, std::vector<int>& indicles)
 {
     this->verticles_ = verticles;
     this->indicles_ = indicles;
@@ -254,4 +252,5 @@ const Eigen::Matrix4d& Renderer::get_mvp()
 
     return mat_mvp_;
 }
+
 

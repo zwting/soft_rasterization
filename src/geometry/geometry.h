@@ -191,27 +191,30 @@ struct Color4B
     }
 };
 
+template <typename T>
 struct Vertex
 {
-    float x, y, z;
+    T x, y, z;
     Color4B c;
 
-    Vertex(float _x, float _y, float _z, uint8_t _r, uint8_t _g, uint8_t _b, uint8_t _a)
+    Vertex(T _x, T _y, T _z, uint8_t _r, uint8_t _g, uint8_t _b, uint8_t _a)
         : x(_x), y(_y), z(_z), c(_r, _g, _b, _a) {}
 
-    Vertex(float _x, float _y, float _z) : x(_x), y(_y), z(_z), c(0, 0, 0, 0xff) {}
+    Vertex(T _x, T _y, T _z) : x(_x), y(_y), z(_z), c(0, 0, 0, 0xff) {}
 
-    Vertex(float _x, float _y, float _z, Color4B _c) : x(_x), y(_y), z(_z), c(_c) {}
+    Vertex(T _x, T _y, T _z, Color4B _c) : x(_x), y(_y), z(_z), c(_c) {}
 
     Vertex() : x(0), y(0), z(0), c(0, 0, 0, 0xff) {}
 
-    friend Vertex operator*(const Eigen::Matrix4d& mat, const Vertex& v)
+    friend Vertex<T> operator*(const Eigen::Matrix4d& mat, const Vertex<T>& v)
     {
         auto v1 = Eigen::Vector4d(v.x, v.y, v.z, 1);
         auto ret = mat * v1;
         return Vertex(ret(0), ret(1), ret(2), v.c);
     }
 };
+typedef Vertex<double> Vertexd;
+typedef Vertex<int> Vertexi;
 
 struct Primitive
 {
@@ -221,40 +224,40 @@ struct Primitive
 
 struct Triangle : public Primitive
 {
-    Vertex points[3];
-    Vec3<float> normal;
+    Vertexd points[3];
+    Vec3<double> normal;
 
-    Triangle(Vertex a, Vertex b, Vertex c)
+    Triangle(Vertexd a, Vertexd b, Vertexd c)
     {
         points[0] = a;
         points[1] = b;
         points[2] = c;
-        const Vec3<float> ca = Vec3<float>(a.x - c.x, a.y - c.y, a.z - c.z);
-        const Vec3<float> ab = Vec3<float>(b.x - a.x, b.y - a.y, b.z - a.z);
+        const Vec3<double> ca = Vec3<double>(a.x - c.x, a.y - c.y, a.z - c.z);
+        const Vec3<double> ab = Vec3<double>(b.x - a.x, b.y - a.y, b.z - a.z);
         normal = ca.cross(ab).norm();
     }
 };
 
 struct Size
 {
-    float width, height;
-    Size(float w, float h) : width(w), height(h) {}
+    double width, height;
+    Size(double w, double h) : width(w), height(h) {}
     Size() = default;
 };
 
 struct BoundingBox
 {
-    Vec2<float> lb_point, rt_point;
-    Vec2<float> get_center() const { return (lb_point + rt_point) * 0.5; }
+    Vec2<double> lb_point, rt_point;
+    Vec2<double> get_center() const { return (lb_point + rt_point) * 0.5; }
     Size get_size() const
     {
         auto size = rt_point - lb_point;
         return Size(size.x, size.y);
     }
     BoundingBox() = default;
-    BoundingBox(Vec2<float> lb, Vec2<float> rt) : lb_point(lb), rt_point(rt) {}
-    BoundingBox(float lb_x, float lb_y, float rt_x, float rt_y) : lb_point(Vec2<float>(lb_x, lb_y)),
-                                                                  rt_point(Vec2<float>(rt_x, rt_y)) {}
+    BoundingBox(Vec2<double> lb, Vec2<double> rt) : lb_point(lb), rt_point(rt) {}
+    BoundingBox(double lb_x, double lb_y, double rt_x, double rt_y) : lb_point(Vec2<double>(lb_x, lb_y)),
+                                                                  rt_point(Vec2<double>(rt_x, rt_y)) {}
 
 };
 
