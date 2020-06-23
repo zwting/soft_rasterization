@@ -8,33 +8,18 @@ struct Vec2
 {
     union
     {
-        struct
-        {
-            T x, y;
-        };
-
-        struct
-        {
-            T u, v;
-        };
-
+        struct { T x, y; };
+        struct { T u, v; };
         T raw[2];
     };
 
-    Vec2(T _x, T _y) : x(_x), y(_y)
-    {
-    }
+    Vec2(T _x, T _y) : x(_x), y(_y) {}
 
-    Vec2() : x(0), y(0)
-    {
-    }
+    Vec2() : x(0), y(0) {}
 
     Vec2<T> operator+(const Vec2<T>& rhl) const { return Vec2<T>(x + rhl.x, y + rhl.y); }
     Vec2<T> operator-() const { return Vec2<T>(-x, -y); }
-    Vec2<T> operator-(const Vec2<T>& rhs) const
-    {
-        return *this + (-rhs);
-    }
+    Vec2<T> operator-(const Vec2<T>& rhs) const { return *this + (-rhs); }
     Vec2<T> operator*(const float s) const { return Vec2<T>(x * s, y * s); }
     T dot(const Vec2<T>& rhl) const { return x * rhl.x + y * rhl.y; }
 
@@ -50,31 +35,15 @@ struct Vec3
 {
     union
     {
-        struct
-        {
-            T x, y, z;
-        };
-
-        struct
-        {
-            T u, v, w;
-        };
-
-        struct
-        {
-            T r, g, b;
-        };
-
+        struct { T x, y, z; };
+        struct { T u, v, w; };
+        struct { T r, g, b; };
         T raw[3];
     };
 
-    Vec3(T _x, T _y, T _z) : x(_x), y(_y), z(_z)
-    {
-    }
+    Vec3(T _x, T _y, T _z) : x(_x), y(_y), z(_z) {}
 
-    Vec3() : x(0), y(0), z(0)
-    {
-    }
+    Vec3() : x(0), y(0), z(0) {}
 
     Vec3<T> operator+(const Vec3<T>& rhl) const { return Vec3<T>(x + rhl.x, y + rhl.y, z + rhl.z); }
     Vec3<T> operator-() const { return Vec3<T>(-x, -y, -z); }
@@ -97,21 +66,13 @@ struct Color3B
 {
     union
     {
-        struct
-        {
-            uint8_t b, g, r;
-        };
-
+        struct { uint8_t b, g, r; };
         uint8_t raw[3]{};
     };
 
-    Color3B(uint8_t _r, uint8_t _g, uint8_t _b) : r(_r), g(_g), b(_b)
-    {
-    }
+    Color3B(uint8_t _r, uint8_t _g, uint8_t _b) : r(_r), g(_g), b(_b) {}
 
-    Color3B() : r(0), g(0), b(0)
-    {
-    }
+    Color3B() : r(0), g(0), b(0) {}
 
     Color3B& operator=(const uint8_t val)
     {
@@ -141,17 +102,13 @@ struct Color4B
     union
     {
         struct { uint8_t a, b, g, r; };
-        struct { Color3B rgb;};
+        struct { Color3B rgb; };
         uint8_t raw[4]{};
     };
 
-    Color4B(uint8_t _r, uint8_t _g, uint8_t _b, uint8_t _a = 0xff) : r(_r), g(_g), b(_b), a(_a)
-    {
-    }
+    Color4B(uint8_t _r, uint8_t _g, uint8_t _b, uint8_t _a = 0xff) : r(_r), g(_g), b(_b), a(_a) {}
 
-    Color4B() : r(0), g(0), b(0), a(0xff)
-    {
-    }
+    Color4B() : r(0), g(0), b(0), a(0xff) {}
 
     Color4B& operator=(const uint8_t val)
     {
@@ -191,7 +148,7 @@ struct Color4B
     }
 };
 
-template <typename T>
+template<typename T>
 struct Vertex
 {
     T x, y, z;
@@ -257,7 +214,7 @@ struct BoundingBox
     BoundingBox() = default;
     BoundingBox(Vec2<double> lb, Vec2<double> rt) : lb_point(lb), rt_point(rt) {}
     BoundingBox(double lb_x, double lb_y, double rt_x, double rt_y) : lb_point(Vec2<double>(lb_x, lb_y)),
-                                                                  rt_point(Vec2<double>(rt_x, rt_y)) {}
+                                                                      rt_point(Vec2<double>(rt_x, rt_y)) {}
 
 };
 
