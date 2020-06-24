@@ -74,8 +74,11 @@ void Renderer::render()
     for (auto frag : fragments)
     {
         Color3B c(frag.c.r, frag.c.g, frag.c.b);
-        this->frame_buffer_->set_pixel(frag.x, frag.y, c);
+        this->back_buffer_->set_pixel(frag.x, frag.y, c);
     }
+
+    //复制到前缓冲
+    std::memcpy(this->frame_buffer_->get_data(), this->back_buffer_->get_data(), this->back_buffer_->size());
 }
 
 std::vector<Vertexd> Renderer::vertex_stage_()
@@ -83,8 +86,8 @@ std::vector<Vertexd> Renderer::vertex_stage_()
     std::vector<Vertexd> ret;
     Eigen::Vector4d v;
     Eigen::Matrix4d view_port_mat;
-    int half_w = frame_buffer_->get_width() / 2;
-    int half_h = frame_buffer_->get_height() / 2;
+    int half_w = back_buffer_->get_width() / 2;
+    int half_h = back_buffer_->get_height() / 2;
     view_port_mat << half_w, 0, 0, half_w,
         0, half_h, 0, half_h,
         0, 0, 1, 0,
@@ -124,8 +127,8 @@ std::vector<Vertexi> Renderer::setup_primitive_and_rasterization(std::vector<Ver
 }
 std::vector<Vertexi> Renderer::setup_triangle(std::vector<Vertexd>& input_vertex)
 {
-    std::vector<Vertexi> ret;
-    auto height = frame_buffer_->get_height();
+    std::vector<Vertexi> ret(100);
+    auto height = back_buffer_->get_height();
     for (decltype(input_vertex.size()) i = 0; i < input_vertex.size(); i += 3)
     {
         BoundingBox bbox = geo_utils::get_bounding_box(input_vertex[i], input_vertex[i + 1], input_vertex[i + 2]);
@@ -176,10 +179,10 @@ std::vector<Vertexi> Renderer::setup_triangle(std::vector<Vertexd>& input_vertex
 
 std::vector<Vertexi> Renderer::fragment_stage_(std::vector<Vertexi>& input_fragments)
 {
-    std::vector<Vertexi> ret;
-    for (auto it = input_fragments.begin(); it != input_fragments.end(); it++)
+    std::vector<Vertexi> ret(input_fragments.size());
+    for (decltype(input_fragments.size()) i = 0; i < input_fragments.size(); i++)
     {
-        ret.emplace_back(Vertexi(it->x, it->y, it->z, it->c));
+        ret.emplace_back(Vertexi(input_fragments[i]));
     }
     return ret;
 }
@@ -197,6 +200,8 @@ Renderer::Renderer(FrameBuffer* frame_buffer, FrameBuffer* depth_buffer)
     assert(frame_buffer != nullptr && depth_buffer != nullptr && frame_buffer->is_size_equal(*depth_buffer));
     this->frame_buffer_ = frame_buffer;
     this->depth_buffer_ = depth_buffer;
+
+    this->back_buffer_ = new FrameBuffer(*frame_buffer);
 
     //初始化z-buffer
 //    std::memset(depth_buffer->get_data(), 0xff, sizeof)
@@ -231,7 +236,7 @@ void Renderer::clear(int clear_flag, const Color3B& clear_color)
     //清理frame buffer
     if (clear_flag & CLEAR_FRAME)
     {
-        frame_buffer_->clear(clear_color);
+        back_buffer_->clear(clear_color);
     }
 
     //清理depth buffer

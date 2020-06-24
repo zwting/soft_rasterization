@@ -13,6 +13,7 @@ class Renderer
  private:
     FrameBuffer* frame_buffer_;
     FrameBuffer* depth_buffer_;
+    FrameBuffer* back_buffer_;
 
     std::vector<Vertexd> verticles_;
     std::vector<int> indicles_;

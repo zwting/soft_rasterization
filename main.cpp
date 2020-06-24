@@ -12,7 +12,7 @@ using namespace std;
 using namespace Eigen;
 
 const int FRAME_WIDTH = 600;
-const int FRAME_HEIGHT = 400;
+const int FRAME_HEIGHT = 360;
 
 Renderer* g_render = nullptr;
 
@@ -25,7 +25,6 @@ Eigen::Matrix4d get_model_mat(float angle, const Vec3<double>& translate = Vec3<
         s, c, 0, translate.y,
         0, 0, 1, translate.z,
         0, 0, 0, 1;
-
 
     return model;
 }
@@ -44,9 +43,9 @@ int main()
     auto depth_buffer = new FrameBuffer(FRAME_WIDTH, FRAME_HEIGHT, FrameBuffer::FrameFormatType::Bit8);
     g_render = new Renderer(frame_buffer, depth_buffer);
     vector<Vertexd> vertices = {
-        { -1.5, -1.0, 0.0, 0xff, 0, 0, 0xff },
-        { 1.5, -1.0, 0.0, 0, 0xff, 0, 0xff },
-        { 0.0, 1.0, 0.0, 0, 0, 0xff, 0xff },
+        { -2, -1.0, 0, 0xff, 0, 0, 0xff },
+        { 2, -1.0, 0, 0, 0xff, 0, 0xff },
+        { 0, 1.0, 0, 0, 0, 0xff, 0xff },
 //        { -1.0, -1.0, -1.0, 0xff, 0, 0, 0xff },
 //        { -1.0, 1.0, -1.0, 0, 0xff, 0, 0xff },
 //        { 1.0, 1.0, -1.0, 0, 0, 0xff, 0xff },
@@ -88,8 +87,7 @@ int main()
     Eigen::IOFormat format(3);
     cout << model.format(format) << projection.format(format) << view.format(format) << endl;
     auto prev_time = get_time_stamps();
-    auto translate = Vec3<double>(2, 0, 0);
-    auto translate1 = Vec3<double>(2, 2, 0);
+    auto translate = Vec3<double>(2, 2, 0);
     while (key != 27)
     {
         static float angle = 0;
@@ -99,9 +97,6 @@ int main()
         g_render->draw_triangles(1);
 
         g_render->set_model(get_model_mat(90 - angle, translate));
-        g_render->draw_triangles(1);
-
-        g_render->set_model(get_model_mat(90 - angle, translate1));
         g_render->draw_triangles(1);
 
         std::memcpy(image.data, g_render->get_frame_buffer()->get_data(), g_render->get_frame_buffer()->size());

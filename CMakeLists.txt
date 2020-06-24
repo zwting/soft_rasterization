@@ -8,6 +8,9 @@ include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${third_part_dir})
 
 # opencv
+if(WIN32)
+set(OpenCV_DIR $ENV{OPENCV_DIR}/../../)
+endif(WIN32)
 find_package( OpenCV REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 

@@ -34,10 +34,11 @@ namespace geo_utils
     Eigen::Matrix4d get_project_mat(float near, float far, float fov, float aspect)
     {
         Eigen::Matrix4d mat;
+        mat.setIdentity();
         float radians = math_utils::Degree2Radians(fov * 0.5f);
         auto tan_half_fov = std::tan(radians);
-        mat(0, 0) = 1.0 / (aspect * tan_half_fov);
-        mat(1, 1) = 1.0 / tan_half_fov;
+        mat(0, 0) = 1.0f / (aspect * tan_half_fov);
+        mat(1, 1) = 1.0f / tan_half_fov;
         mat(2, 2) = -(far + near) / (far - near);
         mat(2, 3) = -2 * far * near / (far - near);
         mat(3, 2) = -1;
